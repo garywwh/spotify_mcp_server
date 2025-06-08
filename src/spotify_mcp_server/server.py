@@ -130,6 +130,7 @@ async def handle_playback(action: str, spotify_uri: Optional[str] = None, num_sk
     - start: Starts playing new item or resumes current playback if called with no uri.
     - pause: Pauses current playback.
     - skip: Skips current track.
+    - previous: Goes to previous track.
     """
     log_info(logger, "Playback action requested", action=action, spotify_uri=spotify_uri, num_skips=num_skips)
     try:
@@ -157,6 +158,10 @@ async def handle_playback(action: str, spotify_uri: Optional[str] = None, num_sk
                 log_info(logger, "Skipping tracks", num_skips=num_skips)
                 spotify_client.skip_track(n=num_skips)
                 return "Skipped to next track."
+            case "previous":
+                log_info(logger, "Going to previous track")
+                spotify_client.previous_track()
+                return "Went to previous track."
             case _:
                 log_error(logger, "Unknown playback action", action=action)
                 return f"Unknown action: {action}"
