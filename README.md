@@ -149,3 +149,5 @@ python run_tests.py --file test_spotify_helper.py
 python run_tests.py --function test_normalize_redirect_uri
 ```
 
+## Inspired by
+Inspired by the work of varunneal on his [spotify-mcp](https://github.com/varunneal/spotify-mcp)
