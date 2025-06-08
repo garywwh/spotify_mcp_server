@@ -1,0 +1,46 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "spotify-mcp-server"
+version = "1.0.0"
+description = "Spotify MCP Server for controlling Spotify playback"
+requires-python = ">=3.10"
+dependencies = [
+    "mcp>=0.1.0",
+    "spotipy>=2.22.1",
+    "fastapi>=0.95.0",
+    "uvicorn>=0.21.1",
+    "pydantic>=2.0.0",
+    "starlette>=0.27.0",
+    "requests>=2.28.2",
+    "python-dotenv>=1.0.0",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-mock>=3.10.0",
+    "httpx>=0.24.0",
+    "pytest-cov>=4.0.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/spotify_mcp_server"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "--cov=src/spotify_mcp_server",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-report=xml",
+]
+asyncio_mode = "auto"
