@@ -1,0 +1,11 @@
+fastapi
+starlette
+uvicorn
+pytest
+pytest-asyncio
+pytest-cov
+httpx
+spotipy
+mcp
+pydantic
+anyio

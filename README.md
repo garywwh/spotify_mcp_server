@@ -1,3 +1,32 @@
+# spotify_mcp
+
+This package provides an MCP-compatible server exposing Spotify controls and queries via the Model Context Protocol (MCP).
+
+Quick overview:
+
+- `src/spotify_mcp_server/server.py` — FastMCP server exposing tools for playback, search, queue, playlists and devices.
+- Tools advertise their input schemas using Pydantic models so MCP clients can introspect them.
+
+Running tests (recommended in a virtualenv):
+
+```bash
+# create and activate venv (macOS/Linux)
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements-dev.txt
+python -m pytest -q
+```
+
+Start server locally (prints OAuth URL):
+
+```bash
+# Start in package root
+python -m src.spotify_mcp_server.server
+```
+
+CI: a GitHub Actions workflow is included that installs dependencies and runs the test suite.
+
+If you want additional changes (improved docs, example client calls, Dockerfile), tell me which and I'll add them.
 # Spotify MCP Server
 
 A MCP (Model Context Protocol) server for controlling Spotify playback, searching for content, and managing playlists.
