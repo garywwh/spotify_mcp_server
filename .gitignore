@@ -13,3 +13,8 @@ htmlcov/
 coverage.xml
 
 Makefile
+.github/
+.gitlab-ci.yml
+Dockerfile
+docker-compose.yml
+*.log
