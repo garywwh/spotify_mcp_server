@@ -8,11 +8,13 @@ searching for content, and managing playlists through a standardized API.
 import sys
 import json
 import logging
+import os
 from typing import List, Optional, Any, Dict
 import inspect
 
 import mcp.types as types
 from mcp.server.fastmcp import FastMCP
+from mcp.server.transport_security import TransportSecuritySettings
 from spotipy import SpotifyException
 from fastapi.responses import JSONResponse
 
@@ -40,26 +42,72 @@ logger = setup_logging("spotify_mcp_server.server", level=logging.INFO)
 # Normalize the redirect URI to meet Spotify's requirements
 if REDIRECT_URI:
     REDIRECT_URI = normalize_redirect_uri(REDIRECT_URI)
-spotify_client = Client(logger)
+
+
+class LazySpotifyClient:
+    """Create the Spotify client only after OAuth has populated the token cache."""
+
+    def __init__(self) -> None:
+        self._client: Client | None = None
+
+    def reset(self) -> None:
+        self._client = None
+
+    def _get_client(self) -> Client:
+        if self._client is None:
+            self._client = Client(logger)
+        return self._client
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._get_client(), name)
+
+
+spotify_client = LazySpotifyClient()
 
 # models are defined in spotify_mcp_server.models
 
 
+def _allowed_hosts() -> list[str]:
+    configured_hosts = [
+        host.strip()
+        for host in os.getenv("MCP_ALLOWED_HOSTS", "").split(",")
+        if host.strip()
+    ]
+    return [
+        "127.0.0.1:*",
+        "localhost:*",
+        "[::1]:*",
+        "spotify-mcp:*",
+        "spotify-mcp.default.svc:*",
+        "spotify-mcp.default.svc.cluster.local:*",
+        *configured_hosts,
+    ]
+
+
 # Initialize FastMCP server
-mcp_server = FastMCP("spotify-mcp")
+mcp_server = FastMCP(
+    "spotify-mcp",
+    transport_security=TransportSecuritySettings(allowed_hosts=_allowed_hosts()),
+)
 
 # Define the callback handler
 @mcp_server.custom_route("/callback", methods=["GET"])
 async def spotify_callback(request):
     """Handle Spotify OAuth callback"""
     code = request.query_params.get('code')
-    log_info(logger, "Received OAuth callback", code=code)
+    oauth_error = request.query_params.get('error')
+    log_info(logger, "Received OAuth callback", code=code, error=oauth_error)
+    if oauth_error:
+        log_error(logger, "Spotify OAuth returned an error", error=oauth_error)
+        return JSONResponse({"detail": f"Spotify OAuth error: {oauth_error}"}, status_code=400)
     if not code:
         log_error(logger, "No code provided in callback")
         return JSONResponse({"detail": "No code provided"}, status_code=400)
 
     try:
         token_info = handle_oauth_callback(code)
+        if hasattr(spotify_client, "reset"):
+            spotify_client.reset()
         log_info(logger, "Successfully handled OAuth callback")
         # Return success message
         return JSONResponse(content={"status": "Authentication successful"})
